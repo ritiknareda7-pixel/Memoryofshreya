@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capturing Moments with Lavii 📸</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@400;600&family=Gloria+Hallelujah&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(-45deg, #ff9a9e, #fad0c4, #ffd1ff, #a1c4fd);
+            --pink-dark: #ff4d6d;
+        }
+
+        * { box-sizing: border-box; }
+        body, html { 
+            margin: 0; padding: 0; 
+            font-family: 'Poppins', sans-serif; 
+            background: var(--bg-gradient);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .page { 
+            display: none; min-height: 100vh; width: 100%; 
+            flex-direction: column; align-items: center; 
+            justify-content: center; padding: 20px; text-align: center;
+        }
+        .active { display: flex; animation: zoomIn 0.8s ease forwards; }
+
+        @keyframes zoomIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+        /* Camera Flash Effect */
+        #flash {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; opacity: 0; z-index: 9999; pointer-events: none;
+        }
+        .flash-active { animation: flashAnim 0.4s ease-out; }
+        @keyframes flashAnim { 0% { opacity: 1; } 100% { opacity: 0; } }
+
+        /* Polaroid Style */
+        .polaroid {
+            background: white; padding: 15px 15px 40px 15px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            border-radius: 5px; transform: rotate(-3deg);
+            max-width: 320px; width: 90%; margin: 20px auto;
+            display: none;
+        }
+        .polaroid img { width: 100%; height: 300px; object-fit: cover; border: 1px solid #ddd; }
+        .polaroid p { 
+            font-family: 'Gloria Hallelujah', cursive; 
+            font-size: 1.2rem; color: #333; margin-top: 15px; 
+        }
+
+        /* Camera Button */
+        .camera-btn {
+            width: 80px; height: 80px; background: #333;
+            border-radius: 50%; border: 5px solid white;
+            cursor: pointer; position: relative;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            transition: 0.2s;
+            margin: 20px auto;
+        }
+        .camera-btn:active { transform: scale(0.9); }
+        .camera-btn::after {
+            content: ""; position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); width: 40px; height: 40px;
+            background: #e74c3c; border-radius: 50%;
+        }
+
+        .btn {
+            background: white; color: var(--pink-dark); border: none;
+            padding: 12px 30px; border-radius: 30px;
+            font-weight: bold; font-size: 1.1rem; cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin-top: 20px;
+        }
+
+        h1 { font-family: 'Dancing Script', cursive; font-size: 4rem; color: white; text-shadow: 2px 2px 10px rgba(0,0,0,0.2); }
+        
+        .msg-box { background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 30px; border-radius: 20px; color: white; max-width: 600px; border: 1px solid rgba(255,255,255,0.3); }
+
+        select {
+            padding: 10px; border-radius: 10px; border: none; font-family: 'Poppins';
+            margin: 15px 0; width: 220px; cursor: pointer;
+        }
+
+        /* Floating Strawberries */
+        .strawberry {
+            position: fixed; font-size: 24px; z-index: 1000;
+            pointer-events: none; animation: floatUp 5s linear infinite;
+        }
+        @keyframes floatUp {
+            from { transform: translateY(110vh) rotate(0deg); opacity: 1; }
+            to { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="flash"></div>
+    <audio id="shutterSound" src="https://www.fesliyanstudios.com/play-mp3/2657"></audio>
+    <audio id="bgMusic" loop></audio>
+
+    <section id="p1" class="page active">
+        <h1>Recent Memories ✨</h1>
+        <div class="msg-box">
+            <p>Every moment with you is like a picture perfect scene. Pick our vibe for today:</p>
+            
+            <select id="songChoice">
+                <option value="song1.mp3">Lavi's Special Song 🎵</option>
+                <option value="song2.mp3">Our Favorite Melody 🎶</option>
+            </select>
+            
+            <br>
+            <button class="btn" onclick="startApp()">Open Lens 📷</button>
+        </div>
+    </section>
+
+    <section id="p2" class="page">
+        <h2 style="color: white; font-family: 'Dancing Script'; font-size: 2.5rem;">Click to Capture a Memory</h2>
+        
+        <div id="photoContainer">
+            <div class="polaroid" id="polaroidFrame">
+                <img id="displayImg" src="" alt="Memory">
+                <p id="displayMsg"></p>
+            </div>
+        </div>
+
+        <div class="camera-btn" id="shutter" onclick="takePhoto()"></div>
+
+        <p id="counter" style="color: white; font-weight: bold;">Snap 0 / 10</p>
+        
+        <button id="nextBtn" class="btn" style="display:none;" onclick="showPage(3)">Your Journey →</button>
+    </section>
+
+    <section id="p3" class="page">
+        <div class="msg-box">
+            <h1>Dear Shreya...</h1>
+            <p style="text-align: left; line-height: 1.8;">
+                These recent photos aren't just images; they are fragments of time I never want to forget. 
+                Whether we are laughing until our stomachs hurt or just sitting in silence, every second with you counts. 
+                Thank you for being my constant. Let's keep making the album of our lives more colorful!
+            </p>
+            <button class="btn" onclick="showPage(4)">Final Surprise 🎁</button>
+        </div>
+    </section>
+
+    <section id="p4" class="page">
+        <h1>Quick Question!</h1>
+        <h3 style="color: white;">Is Shreya the best person in the world? 🌎</h3>
+        <div style="position: relative; height: 200px; width: 300px; margin: 0 auto;">
+            <button class="btn" onclick="alert('OBVIOUSLY! ❤️'); showPage(5)">YES</button>
+            <button class="btn" id="no-btn" style="position: absolute;" onmouseover="moveNo()" onclick="moveNo()">NO</button>
+        </div>
+    </section>
+
+    <section id="p5" class="page">
+        <h1>To Be Continued...</h1>
+        <p style="color: white; font-size: 1.2rem;">Our gallery never ends as long as we are together.</p>
+        <div style="font-size: 4rem;">📸💖🌈</div>
+        <button class="btn" onclick="location.reload()">Replay Memories</button>
+    </section>
+
+    <script>
+        let currentPhoto = 0;
+        const totalPhotos = 10;
+        
+        const messages = [
+            "Remember this laugh? 😂",
+            "This day was pure magic! ✨",
+            "You look so beautiful here. ❤️",
+            "Spontaneous adventures! 🚗",
+            "I'll cherish this forever. 🔒",
+            "The world is better with you. 🌍",
+            "Look at that strawberry glow! 🍓",
+            "Besties for life. 🥂",
+            "Stay sweet, Lavii! 💖",
+            "My favorite memory! ✨"
+        ];
+
+        function startApp() {
+            const music = document.getElementById('bgMusic');
+            music.src = document.getElementById('songChoice').value;
+            music.play();
+            setInterval(createStrawberry, 600);
+            showPage(2);
+        }
+
+        function showPage(num) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('p' + num).classList.add('active');
+            window.scrollTo(0,0);
+        }
+
+        function takePhoto() {
+            if (currentPhoto < totalPhotos) {
+                document.getElementById('shutterSound').play();
+                const flash = document.getElementById('flash');
+                flash.classList.add('flash-active');
+                setTimeout(() => flash.classList.remove('flash-active'), 400);
+
+                currentPhoto++;
+                
+                const frame = document.getElementById('polaroidFrame');
+                const img = document.getElementById('displayImg');
+                const msg = document.getElementById('displayMsg');
+                const counter = document.getElementById('counter');
+
+                img.src = currentPhoto + '.jpg'; 
+                msg.innerText = messages[currentPhoto - 1];
+                counter.innerText = `Snap ${currentPhoto} / ${totalPhotos}`;
+
+                frame.style.display = 'block';
+                frame.style.transform = `rotate(${Math.random() * 10 - 5}deg)`;
+
+                if (currentPhoto === totalPhotos) {
+                    document.getElementById('shutter').style.display = 'none';
+                    document.getElementById('nextBtn').style.display = 'inline-block';
+                }
+            }
+        }
+
+        function moveNo() {
+            const btn = document.getElementById('no-btn');
+            btn.style.left = Math.random() * 80 + '%';
+            btn.style.top = Math.random() * 80 + '%';
+        }
+
+        function createStrawberry() {
+            const s = document.createElement('div');
+            s.className = 'strawberry';
+            s.innerHTML = '🍓';
+            s.style.left = Math.random() * 100 + 'vw';
+            document.body.appendChild(s);
+            setTimeout(() => s.remove(), 5000);
+        }
+    </script>
+</body>
+</html>
+
